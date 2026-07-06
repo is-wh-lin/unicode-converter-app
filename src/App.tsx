@@ -1,6 +1,8 @@
 import { type ChangeEvent, useState } from 'react';
 import { ArrowRightLeft, CheckCircle2, Copy, Trash2 } from 'lucide-react';
 
+type EditableField = 'text' | 'unicode';
+
 const toUnicode = (value: string, escapeAllChars: boolean): string => {
   return value
     .split('')
@@ -71,17 +73,20 @@ export default function App() {
   const [escapeAll, setEscapeAll] = useState(false);
   const [copiedText, setCopiedText] = useState(false);
   const [copiedUnicode, setCopiedUnicode] = useState(false);
+  const [lastEditedField, setLastEditedField] = useState<EditableField | null>(null);
 
   const handleTextChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     const nextText = event.target.value;
     setText(nextText);
     setUnicode(toUnicode(nextText, escapeAll));
+    setLastEditedField('text');
   };
 
   const handleUnicodeChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     const nextUnicode = event.target.value;
     setUnicode(nextUnicode);
     setText(fromUnicode(nextUnicode));
+    setLastEditedField('unicode');
   };
 
   const handleToggleEscape = () => {
@@ -95,10 +100,35 @@ export default function App() {
   const handleClear = () => {
     setText('');
     setUnicode('');
+    setLastEditedField(null);
   };
 
   const handleSwapFields = () => {
     if (!text && !unicode) return;
+
+    if (lastEditedField === 'text') {
+      if (unicodeEscapePattern.test(text)) {
+        setUnicode(text);
+        setText(fromUnicode(text));
+        return;
+      }
+
+      setText(text);
+      setUnicode(toUnicode(text, escapeAll));
+      return;
+    }
+
+    if (lastEditedField === 'unicode') {
+      if (unicodeEscapePattern.test(unicode)) {
+        setText(fromUnicode(unicode));
+        setUnicode(unicode);
+        return;
+      }
+
+      setText(unicode);
+      setUnicode(toUnicode(unicode, escapeAll));
+      return;
+    }
 
     if (unicodeEscapePattern.test(text)) {
       setUnicode(text);
@@ -106,8 +136,13 @@ export default function App() {
       return;
     }
 
-    setText(unicode);
-    setUnicode(text);
+    if (unicode) {
+      setText(fromUnicode(unicode));
+      setUnicode(unicodeEscapePattern.test(unicode) ? unicode : toUnicode(unicode, escapeAll));
+      return;
+    }
+
+    setUnicode(toUnicode(text, escapeAll));
   };
 
   const handleCopy = async (content: string, target: 'text' | 'unicode') => {
@@ -193,8 +228,8 @@ export default function App() {
               onClick={handleSwapFields}
               disabled={!text && !unicode}
               className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-600 shadow-sm transition-colors hover:border-blue-300 hover:text-blue-500 disabled:cursor-not-allowed disabled:opacity-40 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-blue-500 dark:hover:text-blue-400 md:h-12 md:w-12 md:rounded-full md:px-0"
-              title="交換兩個欄位內容"
-              aria-label="交換一般文字與 Unicode 編碼欄位內容"
+              title="交換並修正兩個欄位內容"
+              aria-label="交換並修正一般文字與 Unicode 編碼欄位內容"
             >
               <ArrowRightLeft className="h-4 w-4" aria-hidden="true" />
               <span className="md:sr-only">交換</span>
