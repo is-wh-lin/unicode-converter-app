@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { type ChangeEvent, useState } from 'react';
 import { ArrowRightLeft, CheckCircle2, Copy, Trash2 } from 'lucide-react';
 
 const toUnicode = (value: string, escapeAllChars: boolean): string => {
@@ -70,13 +70,13 @@ export default function App() {
   const [copiedText, setCopiedText] = useState(false);
   const [copiedUnicode, setCopiedUnicode] = useState(false);
 
-  const handleTextChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleTextChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     const nextText = event.target.value;
     setText(nextText);
     setUnicode(toUnicode(nextText, escapeAll));
   };
 
-  const handleUnicodeChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleUnicodeChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     const nextUnicode = event.target.value;
     setUnicode(nextUnicode);
     setText(fromUnicode(nextUnicode));
