@@ -30,6 +30,8 @@ const fromUnicode = (value: string): string => {
   });
 };
 
+const unicodeEscapePattern = /\\u(?:[0-9a-fA-F]{4}|\{[0-9a-fA-F]+\})/;
+
 const copyWithTextareaFallback = (content: string): boolean => {
   const textarea = document.createElement('textarea');
   textarea.value = content;
@@ -95,6 +97,19 @@ export default function App() {
     setUnicode('');
   };
 
+  const handleSwapFields = () => {
+    if (!text && !unicode) return;
+
+    if (unicodeEscapePattern.test(text)) {
+      setUnicode(text);
+      setText(fromUnicode(text));
+      return;
+    }
+
+    setText(unicode);
+    setUnicode(text);
+  };
+
   const handleCopy = async (content: string, target: 'text' | 'unicode') => {
     const success = await writeClipboard(content);
     if (!success) return;
@@ -146,7 +161,7 @@ export default function App() {
           </div>
         </header>
 
-        <section className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <section className="grid grid-cols-1 items-stretch gap-4 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-4">
           <div className="flex flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm transition-shadow focus-within:ring-2 focus-within:ring-blue-500/50 dark:border-neutral-700 dark:bg-neutral-800">
             <div className="flex items-center justify-between border-b border-neutral-100 bg-neutral-50/50 px-4 py-3 dark:border-neutral-700 dark:bg-neutral-800/50">
               <span className="text-sm font-medium text-neutral-600 dark:text-neutral-300">一般文字 (Text)</span>
@@ -170,6 +185,20 @@ export default function App() {
               placeholder="請輸入中文或其他文字..."
               className="min-h-[300px] w-full flex-1 resize-none bg-transparent p-4 focus:outline-none"
             />
+          </div>
+
+          <div className="flex items-center justify-center">
+            <button
+              type="button"
+              onClick={handleSwapFields}
+              disabled={!text && !unicode}
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 text-sm font-medium text-neutral-600 shadow-sm transition-colors hover:border-blue-300 hover:text-blue-500 disabled:cursor-not-allowed disabled:opacity-40 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:border-blue-500 dark:hover:text-blue-400 md:h-12 md:w-12 md:rounded-full md:px-0"
+              title="交換兩個欄位內容"
+              aria-label="交換一般文字與 Unicode 編碼欄位內容"
+            >
+              <ArrowRightLeft className="h-4 w-4" aria-hidden="true" />
+              <span className="md:sr-only">交換</span>
+            </button>
           </div>
 
           <div className="flex flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm transition-shadow focus-within:ring-2 focus-within:ring-blue-500/50 dark:border-neutral-700 dark:bg-neutral-800">
